@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run web",
+      "dependsOn": ["[development] web client", "[development] server"]
+    },
+    {
+      "label": "!dangerous! run web production test",
+      "dependsOn": ["[production] web client", "[production] server"]
+    },
+    {
+      "label": "[development] web client",
+      "type": "npm",
+      "script": "dev",
+      "path": "packages/web",
+      "hide": true
+    },
+    {
+      "label": "[development] server",
+      "type": "npm",
+      "script": "dev",
+      "path": "packages/content-server",
+      "hide": true
+    },
+    {
+      "label": "[production] web client",
+      "type": "npm",
+      "script": "prodrun",
+      "path": "packages/web",
+      "hide": true
+    },
+    {
+      "label": "[production] server",
+      "type": "npm",
+      "script": "dangerous:prodrun",
+      "path": "packages/content-server",
+      "hide": true
+    }
+  ]
+}
