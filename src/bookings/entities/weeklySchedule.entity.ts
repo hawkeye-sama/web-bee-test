@@ -2,20 +2,23 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Service } from './service.entity';
 
-@Entity()
-export class Configuration {
+@Entity('weekly_schedule')
+export class WeeklySchedule {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  maxClients: number;
 
   @Column({ type: 'integer' })
   serviceId: number;
 
-  @ManyToOne(() => Service, (service) => service.configurations)
+  @ManyToOne(() => Service, (service) => service.weeklySchedules)
   service: Service;
 
   @Column()
-  maxDaysInFuture: number;
+  dayOfTheWeek: number;
+
+  @Column()
+  startTime: Date;
+
+  @Column()
+  endTime: Date;
 }

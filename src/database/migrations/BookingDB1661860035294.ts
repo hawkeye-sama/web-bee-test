@@ -14,7 +14,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create User table
     await queryRunner.createTable(
       new Table({
-        name: 'users',
+        name: 'user',
         columns: [
           {
             name: 'id',
@@ -33,7 +33,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create Service table
     await queryRunner.createTable(
       new Table({
-        name: 'services',
+        name: 'service',
         columns: [
           {
             name: 'id',
@@ -43,26 +43,8 @@ export class BookingDB1661860035294 implements MigrationInterface {
             generationStrategy: 'increment',
           },
           { name: 'name', type: 'varchar' },
-        ],
-      }),
-    );
-
-    // Create TimeSlot table
-    await queryRunner.createTable(
-      new Table({
-        name: 'time_slots',
-        columns: [
-          {
-            name: 'id',
-            type: 'integer',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment',
-          },
-          { name: 'slotType', type: 'varchar' }, // can be either service or cleanup
-          { name: 'startTime', type: 'datetime' },
-          { name: 'endTime', type: 'datetime' },
-          { name: 'serviceId', type: 'integer' },
+          { name: 'duration', type: 'integer' },
+          { name: 'cleanupDuration', type: 'integer' },
         ],
       }),
     );
@@ -70,7 +52,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create Booking table
     await queryRunner.createTable(
       new Table({
-        name: 'bookings',
+        name: 'booking',
         columns: [
           {
             name: 'id',
@@ -80,8 +62,9 @@ export class BookingDB1661860035294 implements MigrationInterface {
             generationStrategy: 'increment',
           },
           { name: 'userId', type: 'integer' },
-          { name: 'timeSlotId', type: 'integer' },
-          { name: 'bookingDate', type: 'datetime' },
+          { name: 'serviceId', type: 'integer' },
+          { name: 'bookingStartTime', type: 'datetime' },
+          { name: 'bookingEndTime', type: 'datetime' },
         ],
       }),
     );
@@ -89,7 +72,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create Break table
     await queryRunner.createTable(
       new Table({
-        name: 'breaks',
+        name: 'break',
         columns: [
           {
             name: 'id',
@@ -109,7 +92,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create Configuration table
     await queryRunner.createTable(
       new Table({
-        name: 'configurations',
+        name: 'configuration',
         columns: [
           {
             name: 'id',
@@ -120,8 +103,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
           },
           { name: 'maxClients', type: 'integer' },
           { name: 'serviceId', type: 'integer' },
-          { name: 'duration', type: 'integer' },
-          { name: 'isPrimary', type: 'boolean' },
+          { name: 'maxDaysInFuture', type: 'integer' },
         ],
       }),
     );
@@ -129,7 +111,7 @@ export class BookingDB1661860035294 implements MigrationInterface {
     // Create PlannedOffDate table
     await queryRunner.createTable(
       new Table({
-        name: 'planned_off_dates',
+        name: 'planned_off_date',
         columns: [
           {
             name: 'id',
@@ -138,76 +120,96 @@ export class BookingDB1661860035294 implements MigrationInterface {
             isGenerated: true,
             generationStrategy: 'increment',
           },
-          { name: 'startDate', type: 'datetime' },
-          { name: 'endDate', type: 'datetime' },
+          { name: 'startTime', type: 'datetime' },
+          { name: 'endTime', type: 'datetime' },
           { name: 'serviceId', type: 'integer' },
+        ],
+      }),
+    );
+
+    // Create WeeklySchedule table
+    await queryRunner.createTable(
+      new Table({
+        name: 'weekly_schedule',
+        columns: [
+          {
+            name: 'id',
+            type: 'integer',
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
+          },
+          { name: 'startTime', type: 'datetime' },
+          { name: 'endTime', type: 'datetime' },
+          { name: 'serviceId', type: 'integer' },
+          { name: 'dayOfTheWeek', type: 'integer' },
         ],
       }),
     );
 
     /** ---- FOREIGN KEYS ---- */
 
-    // PlannedOffDate table
+    // WeeklySchedule table
     await queryRunner.createForeignKey(
-      'planned_off_dates',
+      'weekly_schedule',
       new TableForeignKey({
         columnNames: ['serviceId'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'services',
+        referencedTableName: 'service',
+        onDelete: 'CASCADE',
+      }),
+    );
+
+    // PlannedOffDate table
+    await queryRunner.createForeignKey(
+      'planned_off_date',
+      new TableForeignKey({
+        columnNames: ['serviceId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'service',
         onDelete: 'CASCADE',
       }),
     );
 
     // Configuration table
     await queryRunner.createForeignKey(
-      'configurations',
+      'configuration',
       new TableForeignKey({
         columnNames: ['serviceId'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'services',
+        referencedTableName: 'service',
         onDelete: 'CASCADE',
       }),
     );
 
     // Break table
     await queryRunner.createForeignKey(
-      'breaks',
+      'break',
       new TableForeignKey({
         columnNames: ['serviceId'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'services',
+        referencedTableName: 'service',
         onDelete: 'CASCADE',
       }),
     );
 
     // Bookings table
     await queryRunner.createForeignKey(
-      'bookings',
-      new TableForeignKey({
-        columnNames: ['timeSlotId'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'time_slots',
-        onDelete: 'CASCADE',
-      }),
-    );
-
-    await queryRunner.createForeignKey(
-      'bookings',
-      new TableForeignKey({
-        columnNames: ['userId'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'users',
-        onDelete: 'CASCADE',
-      }),
-    );
-
-    // TimeSlot table
-    await queryRunner.createForeignKey(
-      'time_slots',
+      'booking',
       new TableForeignKey({
         columnNames: ['serviceId'],
         referencedColumnNames: ['id'],
-        referencedTableName: 'services',
+        referencedTableName: 'service',
+        onDelete: 'CASCADE',
+      }),
+    );
+
+    await queryRunner.createForeignKey(
+      'booking',
+      new TableForeignKey({
+        columnNames: ['userId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'user',
         onDelete: 'CASCADE',
       }),
     );

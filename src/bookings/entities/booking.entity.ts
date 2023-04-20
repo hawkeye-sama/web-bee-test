@@ -1,12 +1,6 @@
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { TimeSlot } from './timeslot.entity';
+import { Service } from './service.entity';
 import { User } from './user.entity';
 
 @Entity()
@@ -21,11 +15,14 @@ export class Booking {
   user: User;
 
   @Column({ type: 'integer' })
-  timeSlotId: number;
+  serviceId: number;
 
-  @ManyToOne(() => TimeSlot, (timeSlot) => timeSlot.bookings)
-  timeSlot: TimeSlot;
+  @ManyToOne(() => Service, (service) => service.bookings)
+  service: Service;
 
   @Column()
-  bookingDate: Date;
+  bookingStartTime: Date;
+
+  @Column()
+  bookingEndTime: Date;
 }

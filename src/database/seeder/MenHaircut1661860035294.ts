@@ -7,11 +7,11 @@ export class MenHaircut1661860035294 implements MigrationInterface {
     try {
       // create service of men haircut
       await queryRunner.query(
-        `INSERT INTO \`services\` (\`id\`, \`name\`) VALUES (1, 'Men Haircut')`,
+        `INSERT INTO \`service\` (\`id\`, \`name\`, \`duration\`, \`cleanupDuration\`) VALUES (1, 'Men Haircut', 10, 5)`,
       );
 
       // add breaks timing
-      await queryRunner.query(`INSERT INTO breaks (\`startTime\`, \`endTime\`, \`serviceId\` , \`name\`) VALUES
+      await queryRunner.query(`INSERT INTO \`break\` (\`startTime\`, \`endTime\`, \`serviceId\` , \`name\`) VALUES
         ('${new Date('2023-04-20T12:00:00')}', '${new Date(
         '2023-04-20T13:00:00',
       )}', 1, 'lunch break'),
@@ -23,24 +23,30 @@ export class MenHaircut1661860035294 implements MigrationInterface {
       const today = new Date();
 
       // Set the third day from now as a public holiday
-      const publicHoliday = new Date(
+      const publicHolidayStart = new Date(
         today.getFullYear(),
         today.getMonth(),
         today.getDate() + 3,
       );
 
+      const publicHolidayEnd = new Date(
+        publicHolidayStart.getFullYear(),
+        publicHolidayStart.getMonth(),
+        publicHolidayStart.getDate() + 1,
+      );
+
       await queryRunner.query(`
-        INSERT INTO \`planned_off_dates\` (\`startDate\`, \`endDate\`, \`serviceId\`) VALUES
-        ('${publicHoliday}', '${publicHoliday}', 1)
+        INSERT INTO \`planned_off_date\` (\`startTime\`, \`endTime\`, \`serviceId\`) VALUES
+        ('${publicHolidayStart}', '${publicHolidayEnd}', 1)
       `);
 
       // maximum 3 clients and duration of 10 minutes
       await queryRunner.query(`
-      INSERT INTO \`configurations\` (\`maxClients\`, \`serviceId\`, \`duration\`, \`isPrimary\`) VALUES
-      ('3', '1', '10', true)
+      INSERT INTO \`configuration\` (\`maxClients\`, \`serviceId\`, \`maxDaysInFuture\`) VALUES
+      ('3', '1', '7')
       `);
 
-      // slots for the next 7 days, Sunday off, from 08:00-20:00 Monday to Friday. From 10:00-22:00 Saturday.
+      // Weekly Schedule for Monday to Friday (08:00-20:00) and Saturday (10:00-22:00)
 
       const dayOfWeek = {
         SUNDAY: 0,
@@ -67,61 +73,24 @@ export class MenHaircut1661860035294 implements MigrationInterface {
         { start: '10:00', end: '22:00', days: [dayOfWeek.SATURDAY] },
       ];
 
-      const slots = [];
-      const cleanupDuration = 5;
+      const currentDate = new Date();
 
-      for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() + i,
-        );
-        const currentDayOfWeek = currentDate.getDay();
+      for (const timeRange of timeRanges) {
+        const [startHour, startMinute] = timeRange.start.split(':').map(Number);
+        const [endHour, endMinute] = timeRange.end.split(':').map(Number);
 
-        const timeRange = timeRanges.find((range) =>
-          range.days.includes(currentDayOfWeek),
-        );
+        const startTime = new Date(currentDate);
+        startTime.setHours(startHour, startMinute, 0, 0);
 
-        if (timeRange) {
-          const [startHour, startMinute] = timeRange.start
-            .split(':')
-            .map(Number);
-          const [endHour, endMinute] = timeRange.end.split(':').map(Number);
+        const endTime = new Date(currentDate);
+        endTime.setHours(endHour, endMinute, 0, 0);
 
-          const startTime = new Date(currentDate);
-          startTime.setHours(startHour, startMinute, 0, 0);
-
-          const endTime = new Date(currentDate);
-          endTime.setHours(endHour, endMinute, 0, 0);
-
-          while (startTime < endTime) {
-            const slotStart = new Date(startTime);
-            startTime.setMinutes(startTime.getMinutes() + 10);
-
-            slots.push({
-              start: slotStart,
-              end: new Date(startTime),
-              slotType: 'service',
-            });
-
-            const cleanUpTimeStart = new Date(startTime);
-            startTime.setMinutes(startTime.getMinutes() + 5);
-
-            slots.push({
-              start: cleanUpTimeStart,
-              end: new Date(startTime),
-              slotType: 'cleanup',
-            });
-          }
+        for (const day of timeRange.days) {
+          await queryRunner.query(`
+            INSERT INTO \`weekly_schedule\` (\`startTime\`, \`endTime\`, \`serviceId\`, \`dayOfTheWeek\`) VALUES
+            ('${startTime}', '${endTime}', 1, '${day}')
+          `);
         }
-      }
-
-      for (const slot of slots) {
-        // 10-minute slot for the service
-        await queryRunner.query(`
-          INSERT INTO \`time_slots\` (\`startTime\`, \`endTime\`, \`serviceId\`, \`slotType\`) VALUES
-          ('${slot.start}', '${slot.end}', 1, '${slot.slotType}')
-        `);
       }
     } catch (err) {
       throw err;

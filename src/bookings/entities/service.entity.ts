@@ -1,9 +1,10 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
+import { Booking } from './booking.entity';
 import { Break } from './break.entity';
 import { Configuration } from './configuration.entity';
 import { PlannedOffDate } from './plannedOff.entity';
-import { TimeSlot } from './timeslot.entity';
+import { WeeklySchedule } from './weeklySchedule.entity';
 
 @Entity()
 export class Service {
@@ -13,8 +14,14 @@ export class Service {
   @Column()
   name: string;
 
-  @OneToMany(() => TimeSlot, (timeSlot) => timeSlot.service)
-  timeSlots: TimeSlot[];
+  @Column()
+  duration: number;
+
+  @Column()
+  cleanupDuration: number;
+
+  @OneToMany(() => Booking, (booking) => booking.service)
+  bookings: Booking[];
 
   @OneToMany(() => Break, (br) => br.service)
   breaks: Break[];
@@ -24,4 +31,7 @@ export class Service {
 
   @OneToMany(() => Configuration, (configuration) => configuration.service)
   configurations: Configuration[];
+
+  @OneToMany(() => WeeklySchedule, (weeklySchedule) => weeklySchedule.service)
+  weeklySchedules: WeeklySchedule[];
 }
