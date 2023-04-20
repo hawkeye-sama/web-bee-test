@@ -12,13 +12,13 @@ export class Booking {
   userId: number;
 
   @ManyToOne(() => User, (user) => user.bookings)
-  user: User;
+  user?: User;
 
   @Column({ type: 'integer' })
   serviceId: number;
 
   @ManyToOne(() => Service, (service) => service.bookings)
-  service: Service;
+  service?: Service;
 
   @Column()
   bookingStartTime: Date;

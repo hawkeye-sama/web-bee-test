@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Service } from './entities/service.entity';
@@ -19,7 +20,9 @@ export class BookingService {
     private bookingRepository: Repository<Booking>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) {
+    //
+  }
 
   async getServices() {
     const services = await this.serviceRepository
@@ -42,8 +45,14 @@ export class BookingService {
 
       const slots = [];
 
+      if (!weeklySchedules) {
+        throw new NotImplementedException(
+          'Weekly schedules are not implemented',
+        );
+      }
+
       for (const schedule of weeklySchedules) {
-        const dayOfTheWeek = schedule.dayOfTheWeek - 1;
+        const dayOfTheWeek = schedule.dayOfTheWeek;
 
         const startTime = new Date(schedule.startTime);
         const endTime = new Date(schedule.endTime);
@@ -67,11 +76,9 @@ export class BookingService {
         }
       }
 
-      // filtering out the breaks inside the slots
       const filteredSlots = slots.filter((slot) => {
-        //TODO filter out slot if within a booking more than maxClients
-
-        const sameTimeBookings = bookings.filter(
+        // removing slots that already have maxClients
+        const sameTimeBookings = bookings?.filter(
           (booking) =>
             new Date(booking.bookingStartTime) === new Date(slot.start) &&
             new Date(booking.bookingEndTime) === new Date(slot.end),
@@ -79,6 +86,7 @@ export class BookingService {
 
         if (
           configurations?.length &&
+          sameTimeBookings &&
           sameTimeBookings.length >= configurations[0].maxClients
         ) {
           return false;
@@ -100,7 +108,7 @@ export class BookingService {
         );
 
         // filter out time slots that fall within any break
-        const isWithinBreak = breaks.some((br) => {
+        const isWithinBreak = breaks?.some((br) => {
           const breakStartTime = new Date(
             0,
             0,
@@ -123,7 +131,7 @@ export class BookingService {
         }
 
         // filter out time slots that fall within any planned off date
-        const isWithinPlannedOffDate = plannedOffDates.some((plannedOff) => {
+        const isWithinPlannedOffDate = plannedOffDates?.some((plannedOff) => {
           const plannedOffStartTime = new Date(plannedOff.startTime);
           const plannedOffEndTime = new Date(plannedOff.endTime);
           return (
@@ -137,7 +145,12 @@ export class BookingService {
         // Filter slots based on the maxDaysInFuture configuration
         const today = new Date();
         const maxDate = new Date(today);
-        maxDate.setDate(maxDate.getDate() + configurations[0].maxDaysInFuture);
+        maxDate.setDate(
+          maxDate.getDate() +
+            (configurations && configurations.length
+              ? configurations[0].maxDaysInFuture
+              : 0),
+        );
         if (slot.start > maxDate) {
           return false;
         }
@@ -223,51 +236,56 @@ export class BookingService {
       endingDate.getMinutes(),
     );
 
-    for (const br of breaks) {
-      const breakStart = new Date(
-        0,
-        0,
-        0,
-        br.startTime.getHours(),
-        br.startTime.getMinutes(),
-      );
+    // check if the time ends up colliding with breaks
+    if (breaks) {
+      for (const br of breaks) {
+        const breakStart = new Date(
+          0,
+          0,
+          0,
+          br.startTime.getHours(),
+          br.startTime.getMinutes(),
+        );
 
-      const breakEnd = new Date(
-        0,
-        0,
-        0,
-        br.endTime.getHours(),
-        br.endTime.getMinutes(),
-      );
+        const breakEnd = new Date(
+          0,
+          0,
+          0,
+          br.endTime.getHours(),
+          br.endTime.getMinutes(),
+        );
 
-      if (
-        (startingHours >= breakStart && startingHours < breakEnd) ||
-        (endingHours > breakStart && endingHours <= breakEnd) ||
-        (startingHours >= breakStart && endingHours <= breakEnd)
-      ) {
-        throw new BadRequestException('Requested slot falls during a break');
+        if (
+          (startingHours >= breakStart && startingHours < breakEnd) ||
+          (endingHours > breakStart && endingHours <= breakEnd) ||
+          (startingHours >= breakStart && endingHours <= breakEnd)
+        ) {
+          throw new BadRequestException('Requested slot falls during a break');
+        }
       }
     }
 
     // Check if the requested slot falls on a planned off date and time duration
-    for (const plannedOffDate of plannedOffDates) {
-      const plannedOffStart = new Date(plannedOffDate.startTime);
-      const plannedOffEnd = new Date(plannedOffDate.endTime);
+    if (plannedOffDates) {
+      for (const plannedOffDate of plannedOffDates) {
+        const plannedOffStart = new Date(plannedOffDate.startTime);
+        const plannedOffEnd = new Date(plannedOffDate.endTime);
 
-      if (
-        (startingDate >= plannedOffStart && startingDate < plannedOffEnd) ||
-        (endingDate > plannedOffStart && endingDate <= plannedOffEnd) ||
-        (startingDate >= plannedOffStart && endingDate <= plannedOffEnd)
-      ) {
-        throw new BadRequestException(
-          'Requested slot falls on a planned off date and time duration',
-        );
+        if (
+          (startingDate >= plannedOffStart && startingDate < plannedOffEnd) ||
+          (endingDate > plannedOffStart && endingDate <= plannedOffEnd) ||
+          (startingDate >= plannedOffStart && endingDate <= plannedOffEnd)
+        ) {
+          throw new BadRequestException(
+            'Requested slot falls on a planned off date and time duration',
+          );
+        }
       }
     }
 
-    const dayOfTheWeek = new Date(startingDate).getUTCDay();
+    const dayOfTheWeek = new Date(startingDate).getDay();
 
-    const currentWeeklySchedule = weeklySchedules.find(
+    const currentWeeklySchedule = weeklySchedules?.find(
       (schedule) => schedule.dayOfTheWeek === dayOfTheWeek,
     );
 
@@ -313,6 +331,7 @@ export class BookingService {
       );
     }
 
+    // if time goes like 8:02 rather than 8:10 assuming service duration is 10 minutes
     const startTimeDiff = startingHours.getTime() - scheduleStartTime.getTime();
     const endTimeDiff = endingHours.getTime() - scheduleEndTime.getTime();
 

@@ -17,5 +17,5 @@ export class PlannedOffDate {
   serviceId: number;
 
   @ManyToOne(() => Service, (service) => service.plannedOffDates)
-  service: Service;
+  service?: Service;
 }

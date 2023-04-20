@@ -14,7 +14,7 @@ export class Configuration {
   serviceId: number;
 
   @ManyToOne(() => Service, (service) => service.configurations)
-  service: Service;
+  service?: Service;
 
   @Column()
   maxDaysInFuture: number;

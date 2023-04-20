@@ -11,7 +11,7 @@ export class WeeklySchedule {
   serviceId: number;
 
   @ManyToOne(() => Service, (service) => service.weeklySchedules)
-  service: Service;
+  service?: Service;
 
   @Column()
   dayOfTheWeek: number;

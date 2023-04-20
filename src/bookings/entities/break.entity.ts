@@ -20,5 +20,5 @@ export class Break {
   serviceId: number;
 
   @ManyToOne(() => Service, (service) => service.breaks)
-  service: Service;
+  service?: Service;
 }

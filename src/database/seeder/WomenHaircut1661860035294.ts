@@ -1,23 +1,23 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MenHaircut1661860035294 implements MigrationInterface {
-  name = 'MenHaircut1661860035294';
+export class WomenHaircut1661860035294 implements MigrationInterface {
+  name = 'WomenHaircut1661860035294';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     try {
       // create service of men haircut
       await queryRunner.query(
-        `INSERT INTO \`service\` (\`id\`, \`name\`, \`duration\`, \`cleanupDuration\`) VALUES (1, 'Men Haircut', 10, 5)`,
+        `INSERT INTO \`service\` (\`id\`, \`name\`, \`duration\`, \`cleanupDuration\`) VALUES (2, 'Women Haircut', 60, 10)`,
       );
 
       // add breaks timing
       await queryRunner.query(`INSERT INTO \`break\` (\`startTime\`, \`endTime\`, \`serviceId\` , \`name\`) VALUES
         ('${new Date('2023-04-20T12:00:00')}', '${new Date(
         '2023-04-20T13:00:00',
-      )}', 1, 'lunch break'),
+      )}', 2, 'lunch break'),
         ('${new Date('2023-04-20T15:00:00')}', '${new Date(
         '2023-04-20T16:00:00',
-      )}', 1, 'clean break')
+      )}', 2, 'clean break')
       `);
 
       const today = new Date();
@@ -37,13 +37,13 @@ export class MenHaircut1661860035294 implements MigrationInterface {
 
       await queryRunner.query(`
         INSERT INTO \`planned_off_date\` (\`startTime\`, \`endTime\`, \`serviceId\`) VALUES
-        ('${publicHolidayStart}', '${publicHolidayEnd}', 1)
+        ('${publicHolidayStart}', '${publicHolidayEnd}', 2)
       `);
 
       // maximum 3 clients and duration of 10 minutes
       await queryRunner.query(`
       INSERT INTO \`configuration\` (\`maxClients\`, \`serviceId\`, \`maxDaysInFuture\`) VALUES
-      (3, 1, 7)
+      (3, 2, 7)
       `);
 
       // Weekly Schedule for Monday to Friday (08:00-20:00) and Saturday (10:00-22:00)
@@ -88,7 +88,7 @@ export class MenHaircut1661860035294 implements MigrationInterface {
         for (const day of timeRange.days) {
           await queryRunner.query(`
             INSERT INTO \`weekly_schedule\` (\`startTime\`, \`endTime\`, \`serviceId\`, \`dayOfTheWeek\`) VALUES
-            ('${startTime}', '${endTime}', 1, '${day}')
+            ('${startTime}', '${endTime}', 2, '${day}')
           `);
         }
       }

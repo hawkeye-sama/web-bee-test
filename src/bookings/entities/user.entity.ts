@@ -17,5 +17,5 @@ export class User {
   email: string;
 
   @OneToMany(() => Booking, (booking) => booking.user)
-  bookings: Booking[];
+  bookings?: Booking[];
 }

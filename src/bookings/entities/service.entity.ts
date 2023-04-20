@@ -21,17 +21,17 @@ export class Service {
   cleanupDuration: number;
 
   @OneToMany(() => Booking, (booking) => booking.service)
-  bookings: Booking[];
+  bookings?: Booking[];
 
   @OneToMany(() => Break, (br) => br.service)
-  breaks: Break[];
+  breaks?: Break[];
 
   @OneToMany(() => PlannedOffDate, (plannedOffDate) => plannedOffDate.service)
-  plannedOffDates: PlannedOffDate[];
+  plannedOffDates?: PlannedOffDate[];
 
   @OneToMany(() => Configuration, (configuration) => configuration.service)
-  configurations: Configuration[];
+  configurations?: Configuration[];
 
   @OneToMany(() => WeeklySchedule, (weeklySchedule) => weeklySchedule.service)
-  weeklySchedules: WeeklySchedule[];
+  weeklySchedules?: WeeklySchedule[];
 }
