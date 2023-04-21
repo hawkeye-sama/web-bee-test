@@ -1,6 +1,6 @@
 # Appointment Service
 
-The project structure is similiar to the initial code test [link](https://github.com/hawkeye-sama/node_test_new) (just copied that project over).
+The project structure is similiar to the initial code test [link](https://github.com/hawkeye-sama/node_test_new) (just copied nestjs typeorm project over).
 
 ## Note
 
