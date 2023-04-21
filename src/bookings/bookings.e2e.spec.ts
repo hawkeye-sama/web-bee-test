@@ -27,7 +27,7 @@ describe('bookings', () => {
   afterEach(async () => {
     await app.close();
     // essential so that it releases the resources
-    await new Promise<void>((resolve) => setTimeout(() => resolve(), 300));
+    await new Promise<void>((resolve) => setTimeout(() => resolve(), 500));
   });
 
   it(`GET /bookings/service - get available appointments for all calenders`, async () => {
@@ -124,12 +124,17 @@ describe('bookings', () => {
       ],
     };
 
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post(`/bookings/service/appointment/${serviceId}`)
       .send(appointmentData)
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
       .expect(400);
+
+    expect(response.body.statusCode).toEqual(400);
+    expect(response.body.message).toEqual(
+      'Failed to set booking, client amount is invalid for single time slot ',
+    );
   });
 
   it('POST /bookings/service/appointment/:serviceId - Fail to book appointment due to requested slot falls during a break', async () => {

@@ -21,10 +21,9 @@ export class BookingService {
     private bookingRepository: Repository<Booking>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {
-    //
-  }
+  ) {}
 
+  // gets the available appointments list
   async getServices() {
     const services = await this.serviceRepository
       .createQueryBuilder('service')
@@ -173,6 +172,7 @@ export class BookingService {
     return availableSlots;
   }
 
+  // adds a customer appointment
   async addAppointment(
     serviceId: number,
     appointmentData: AppointmentInputDto,
@@ -202,7 +202,7 @@ export class BookingService {
 
     const { startTime, endTime, clients } = appointmentData;
 
-    // if client sends more than configured amount then throw error since it becomes a race condition which is not mentioned
+    // if client sends more than configured amount then throw error
     if (configurations && clients.length > configurations[0].maxClients) {
       throw new BadRequestException(
         'Failed to set booking, client amount is invalid for single time slot ',
@@ -221,12 +221,12 @@ export class BookingService {
       )
       .getMany();
 
+    // check if this booking has more than max client allowed
     if (
       existingBooking &&
       configurations?.length &&
       existingBooking.length >= configurations[0].maxClients
     ) {
-      // check if this booking has more than max client
       throw new BadRequestException('Already at max clients limit');
     }
 
