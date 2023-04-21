@@ -80,8 +80,10 @@ export class BookingService {
         // removing slots that already have maxClients
         const sameTimeBookings = bookings?.filter(
           (booking) =>
-            new Date(booking.bookingStartTime) === new Date(slot.start) &&
-            new Date(booking.bookingEndTime) === new Date(slot.end),
+            new Date(booking.bookingStartTime).getTime() ===
+              new Date(slot.start).getTime() &&
+            new Date(booking.bookingEndTime).getTime() ===
+              new Date(slot.end).getTime(),
         );
 
         if (
@@ -175,6 +177,10 @@ export class BookingService {
     serviceId: number,
     appointmentData: AppointmentInputDto,
   ) {
+    if (!serviceId) {
+      throw new NotFoundException('Service not found');
+    }
+
     // Validate the service
     const service = await this.serviceRepository.findOne({
       where: {
@@ -195,6 +201,13 @@ export class BookingService {
       service;
 
     const { startTime, endTime, clients } = appointmentData;
+
+    // if client sends more than configured amount then throw error since it becomes a race condition which is not mentioned
+    if (configurations && clients.length > configurations[0].maxClients) {
+      throw new BadRequestException(
+        'Failed to set booking, client amount is invalid for single time slot ',
+      );
+    }
 
     const existingBooking = await this.bookingRepository
       .createQueryBuilder('booking')
@@ -283,7 +296,7 @@ export class BookingService {
       }
     }
 
-    const dayOfTheWeek = new Date(startingDate).getDay();
+    const dayOfTheWeek = new Date(startingDate).getDay() - 1;
 
     const currentWeeklySchedule = weeklySchedules?.find(
       (schedule) => schedule.dayOfTheWeek === dayOfTheWeek,
@@ -322,23 +335,20 @@ export class BookingService {
     const slotIntervalMilliseconds = slotInterval * 60 * 1000;
 
     // if the slot was set for more than the duration it was suppose e.g 10 minutes slot but client sent 30 minutes
-    if (
-      endingHours.getTime() - startingHours.getTime() >
-      slotIntervalMilliseconds
-    ) {
+    const timeSlotDuration = Math.abs(
+      endingHours.getTime() - startingHours.getTime(),
+    );
+    if (timeSlotDuration != slotIntervalMilliseconds) {
       throw new BadRequestException(
-        'Requested slot is invalid because the duration is more than configured',
+        'Requested slot is added because the duration is invalid',
       );
     }
 
     // if time goes like 8:02 rather than 8:10 assuming service duration is 10 minutes
-    const startTimeDiff = startingHours.getTime() - scheduleStartTime.getTime();
-    const endTimeDiff = endingHours.getTime() - scheduleEndTime.getTime();
+    const timeDiff =
+      new Date(endTime).getTime() - new Date(startTime).getTime();
 
-    if (
-      startTimeDiff % slotIntervalMilliseconds !== 0 ||
-      endTimeDiff % slotIntervalMilliseconds !== 0
-    ) {
+    if (timeDiff - slotIntervalMilliseconds !== 0) {
       throw new BadRequestException(
         'Requested slot does not align with slot intervals',
       );

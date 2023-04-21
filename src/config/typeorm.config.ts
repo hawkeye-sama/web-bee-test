@@ -10,18 +10,10 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
   useFactory: async (): Promise<TypeOrmModuleOptions> => {
     return {
       type: 'sqlite',
-      // entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-      // entities: [Event],
       database: 'database.db',
       entities: [__dirname + '/../entities/*.entity.{js,ts}'],
       migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
-      //   cli: {
-      //     migrationsDir: __dirname + '/../database/migrations',
-      //   },
       migrationsTableName: 'migrations',
-      //   extra: {
-      //     charset: 'utf8mb4_unicode_ci',
-      //   },
       synchronize: false,
       logging: true,
       autoLoadEntities: true,
@@ -31,18 +23,10 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'sqlite',
-  // entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-  // entities: [Event],
   database: 'database.db',
   entities: [__dirname + '/../entities/*.entity.{js,ts}'],
   migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
-  //   cli: {
-  //     migrationsDir: __dirname + '/../database/migrations',
-  //   },
   migrationsTableName: 'migrations',
-  //   extra: {
-  //     charset: 'utf8mb4_unicode_ci',
-  //   },
   synchronize: false,
   logging: true,
   autoLoadEntities: true,
@@ -50,18 +34,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
 
 export const seederOrmConfig: TypeOrmModuleOptions = {
   type: 'sqlite',
-  // entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-  // entities: [Event],
   database: 'database.db',
   entities: [__dirname + '/../entities/*.entity.{js,ts}'],
   migrations: [__dirname + '/../database/seeder/*{.ts,.js}'],
-  //   cli: {
-  //     migrationsDir: __dirname + '/../database/migrations',
-  //   },
   migrationsTableName: 'seeds',
-  //   extra: {
-  //     charset: 'utf8mb4_unicode_ci',
-  //   },
   synchronize: false,
   logging: true,
   autoLoadEntities: true,
