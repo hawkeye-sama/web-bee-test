@@ -27,7 +27,7 @@ describe('bookings', () => {
   afterEach(async () => {
     await app.close();
     // essential so that it releases the resources
-    await new Promise<void>((resolve) => setTimeout(() => resolve(), 500));
+    await new Promise<void>((resolve) => setTimeout(() => resolve(), 300));
   });
 
   it(`GET /bookings/service - get available appointments for all calenders`, async () => {
@@ -59,6 +59,7 @@ describe('bookings', () => {
   });
 
   it('POST /bookings/service/appointment/:serviceId - Successfully book appointment', async () => {
+    // get list of available appointments
     const availableSlots = await request(app.getHttpServer())
       .get('/bookings/service')
       .expect(200);
@@ -76,7 +77,6 @@ describe('bookings', () => {
       ],
     };
 
-    console.log(appointmentData);
     const response = await request(app.getHttpServer())
       .post(`/bookings/service/appointment/${serviceId}`)
       .send(appointmentData)
