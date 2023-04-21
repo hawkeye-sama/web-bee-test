@@ -14,6 +14,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class BookingService {
   constructor(
+    // While this show error on linter ( it could be because of nestJS library typeorm issue, unable to find anything on it), it works perfectly fine
     @InjectRepository(Service)
     private serviceRepository: Repository<Service>,
     @InjectRepository(Booking)
@@ -45,10 +46,9 @@ export class BookingService {
 
       const slots = [];
 
+      // we need weekly schedule of service so that we can get available appointments from next days
       if (!weeklySchedules) {
-        throw new NotImplementedException(
-          'Weekly schedules are not implemented',
-        );
+        throw new NotImplementedException('Weekly schedules are not added');
       }
 
       for (const schedule of weeklySchedules) {
@@ -392,8 +392,6 @@ export class BookingService {
 
     // Save the bookings in the repository
     await this.bookingRepository.save(bookings);
-
-    // TODO Check if the booking time falls between a cleanup break
 
     return {
       status: 200,

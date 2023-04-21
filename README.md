@@ -1,6 +1,6 @@
-# Booking Service
+# Appointment Service
 
-This project provides an API for booking appointments for services.
+The project structure is similiar to the initial code test [link](https://github.com/hawkeye-sama/node_test_new) (just copied that project over).
 
 ## Note
 
